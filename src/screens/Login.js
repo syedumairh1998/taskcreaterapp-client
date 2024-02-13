@@ -12,7 +12,9 @@ import Grid from "@mui/material/Grid";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-// import backgroundImage from '../assets/img1.jpg'
+import Toaster from "../components/Toast";
+import { useState } from "react";
+import { userLogin } from "../services/generalAPI";
 
 function Copyright(props) {
   return (
@@ -37,17 +39,46 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function SignInSide() {
-  const handleSubmit = (event) => {
+  const [showToast, setShowToast] = useState({ show: false });
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
+    const user_name = data.get("user_name");
+    const password = data.get("password");
+    if (!user_name || !password) {
+      setShowToast((prevState) => ({
+        ...prevState,
+        show: true,
+        color: "red",
+        message: "Please provide username and password !",
+      }));
+    } else {
+      const options = {
+        method: "post",
+        url: "/user/login",
+        headers: {},
+        data: { user_name, password },
+      };
+      const userData = await userLogin(options);
+      if (userData.status === 200) {
+        setShowToast((prevState) => ({
+          ...prevState,
+          show: true,
+          color: "green",
+          message: "User login successfull !",
+        }));
+      }
+    }
   };
 
   return (
     <ThemeProvider theme={defaultTheme}>
+      <Toaster
+        setShowToast={setShowToast}
+        showToast={showToast}
+        vertical="bottom"
+        horizontal="right"
+      />
       <Grid container component="main" sx={{ height: "100vh" }}>
         <CssBaseline />
         <Grid
@@ -93,10 +124,10 @@ export default function SignInSide() {
                 margin="normal"
                 required
                 fullWidth
-                id="email"
-                label="Email Address"
-                name="email"
-                autoComplete="email"
+                id="user_name"
+                label="Username"
+                name="user_name"
+                autoComplete="user_name"
                 autoFocus
               />
               <TextField
