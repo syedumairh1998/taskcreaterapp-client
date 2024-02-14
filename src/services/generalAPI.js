@@ -8,7 +8,6 @@ export const userLogin = async ({ method, headers, url, data }) => {
       headers,
       data,
     };
-    // const response = await axios.post("http://localhost:4000/user/login", data);
     const response = await axios(payload);
     return response;
   } catch (error) {

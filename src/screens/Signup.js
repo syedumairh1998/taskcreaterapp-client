@@ -12,6 +12,9 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { userLogin } from "../services/generalAPI";
+import { useState } from "react";
+import Toaster from "../components/Toast";
 
 function Copyright(props) {
   return (
@@ -36,17 +39,58 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function SignUp() {
-  const handleSubmit = (event) => {
+  const [showToast, setShowToast] = useState({ show: false });
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
+    const user_name = data.get("user_name");
+    const password = data.get("password");
+    const confirm_password = data.get("confirm_password");
+    const email = data.get("email");
+    console.log("signup ======>", user_name, email, password, confirm_password);
+
+    if (!user_name || !password || !confirm_password || !email) {
+      setShowToast((prevState) => ({
+        ...prevState,
+        show: true,
+        color: "red",
+        message: "Please provide all the required fields !",
+      }));
+    } else if (password !== confirm_password) {
+      setShowToast((prevState) => ({
+        ...prevState,
+        show: true,
+        color: "red",
+        message: "Password and confirm password field is not matching !",
+      }));
+    } else {
+      const options = {
+        method: "post",
+        url: "/user/register",
+        headers: {},
+        data: { email, user_name, password, confirm_password },
+      };
+      const response = await userLogin(options);
+      const { data } = response;
+      console.log("====================================>", data);
+      setShowToast((prevState) => ({
+        ...prevState,
+        show: true,
+        color: response.status === 201 ? "green" : "red",
+        message: data.message,
+      }));
+    }
   };
 
   return (
     <ThemeProvider theme={defaultTheme}>
+      <Toaster
+        setShowToast={setShowToast}
+        showToast={showToast}
+        vertical="bottom"
+        horizontal="right"
+      />
       <Container component="main" maxWidth="xs">
         <CssBaseline />
         <Box
@@ -70,24 +114,13 @@ export default function SignUp() {
             sx={{ mt: 3 }}
           >
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  autoComplete="given-name"
-                  name="firstName"
-                  required
-                  fullWidth
-                  id="firstName"
-                  label="First Name"
-                  autoFocus
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <TextField
                   required
                   fullWidth
                   id="lastName"
-                  label="Last Name"
-                  name="lastName"
+                  label="User Name"
+                  name="user_name"
                   autoComplete="family-name"
                 />
               </Grid>
@@ -101,7 +134,7 @@ export default function SignUp() {
                   autoComplete="email"
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   required
                   fullWidth
@@ -109,6 +142,17 @@ export default function SignUp() {
                   label="Password"
                   type="password"
                   id="password"
+                  autoComplete="new-password"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  name="confirm_password"
+                  label="confirm_Password"
+                  type="confirm_password"
+                  id="confirm_password"
                   autoComplete="new-password"
                 />
               </Grid>
