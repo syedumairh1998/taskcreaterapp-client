@@ -15,6 +15,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { userLogin } from "../services/generalAPI";
 import { useState } from "react";
 import Toaster from "../components/Toast";
+import { validateData } from "../utils/validateData";
 
 function Copyright(props) {
   return (
@@ -42,29 +43,15 @@ export default function SignUp() {
   const [showToast, setShowToast] = useState({ show: false });
 
   const handleSubmit = async (event) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const user_name = data.get("user_name");
-    const password = data.get("password");
-    const confirm_password = data.get("confirm_password");
-    const email = data.get("email");
-    console.log("signup ======>", user_name, email, password, confirm_password);
+    try {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      validateData(formData, "signup");
+      const user_name = formData.get("user_name");
+      const password = formData.get("password");
+      const confirm_password = formData.get("confirm_password");
+      const email = formData.get("email");
 
-    if (!user_name || !password || !confirm_password || !email) {
-      setShowToast((prevState) => ({
-        ...prevState,
-        show: true,
-        color: "red",
-        message: "Please provide all the required fields !",
-      }));
-    } else if (password !== confirm_password) {
-      setShowToast((prevState) => ({
-        ...prevState,
-        show: true,
-        color: "red",
-        message: "Password and confirm password field is not matching !",
-      }));
-    } else {
       const options = {
         method: "post",
         url: "/user/register",
@@ -73,12 +60,21 @@ export default function SignUp() {
       };
       const response = await userLogin(options);
       const { data } = response;
-      console.log("====================================>", data);
+      if (data.success === false) {
+        throw data.message;
+      }
       setShowToast((prevState) => ({
         ...prevState,
         show: true,
-        color: response.status === 201 ? "green" : "red",
+        color: "green",
         message: data.message,
+      }));
+    } catch (error) {
+      setShowToast((prevState) => ({
+        ...prevState,
+        show: true,
+        color: "red",
+        message: error,
       }));
     }
   };

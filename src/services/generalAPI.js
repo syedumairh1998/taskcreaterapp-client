@@ -11,6 +11,9 @@ export const userLogin = async ({ method, headers, url, data }) => {
     const response = await axios(payload);
     return response;
   } catch (error) {
-    console.log(error);
+    console.log("yahan =====================================>", error);
+    return {
+      data: { message: "Whoop! Something went wrong", success: false },
+    };
   }
 };
